@@ -497,6 +497,188 @@ input {
 .menu-item.danger { color: var(--danger); }
 .menu-item.danger svg { color: var(--danger); }
 
+/* ============ STATYSTYKI ============ */
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 10px;
+    margin-bottom: 6px;
+}
+.stat-color {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+.stat-name { flex: 1; font-weight: 500; }
+.stat-count {
+    background: var(--bg-elevated-2);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 36px;
+    text-align: center;
+}
+.stat-count.zero { opacity: 0.4; }
+.stats-empty {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 1.5rem;
+    font-size: 0.9rem;
+}
+
+/* ============ PRZYCISK TRYBU SKLEPOWEGO ============ */
+.shop-mode-btn {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #1a1a1a;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    transition: transform 0.1s;
+}
+.shop-mode-btn:active { transform: scale(0.98); }
+.shop-mode-btn svg { width: 22px; height: 22px; }
+
+/* ============ TRYB SKLEPOWY (FULLSCREEN) ============ */
+#shop-mode-screen {
+    background: #ffffff;
+    z-index: 1000;
+    padding: 0;
+}
+.shop-banner {
+    width: 100%;
+    padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-top));
+    padding-top: calc(1rem + env(safe-area-inset-top));
+    text-align: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.shop-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent 50%);
+    pointer-events: none;
+}
+.shop-banner-name {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    z-index: 1;
+    position: relative;
+}
+.shop-close-btn {
+    position: absolute;
+    top: calc(0.5rem + env(safe-area-inset-top));
+    right: 0.75rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: background 0.2s;
+}
+.shop-close-btn:active { background: rgba(0,0,0,0.3); }
+.shop-close-btn svg { width: 22px; height: 22px; color: white; }
+.shop-code-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: white;
+    overflow-y: auto;
+    gap: 1.25rem;
+}
+.shop-code-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    flex-shrink: 0;
+}
+.shop-code-wrap svg, .shop-code-wrap canvas, .shop-code-wrap img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+.shop-code-wrap.qr {
+    max-width: 340px;
+    margin: 0 auto;
+}
+.shop-code-wrap.qr > div {
+    width: 100% !important;
+    height: auto !important;
+}
+.shop-code-wrap.qr img,
+.shop-code-wrap.qr canvas {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1;
+}
+.shop-code-wrap.barcode {
+    padding: 12px 0;
+    width: 100%;
+}
+.shop-code-wrap.barcode svg {
+    width: 100% !important;
+    height: auto !important;
+}
+.shop-code-number {
+    color: #000;
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-align: center;
+    word-break: break-all;
+    letter-spacing: 0.03em;
+    padding: 0 1rem;
+    flex-shrink: 0;
+}
+.shop-code-url {
+    color: #444;
+    font-size: 0.95rem;
+    word-break: break-all;
+    text-align: center;
+    padding: 0 1rem;
+    flex-shrink: 0;
+}
+.shop-hint {
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+    padding: 1rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
+    background: white;
+    flex-shrink: 0;
+}
+.shop-hint b { color: #000; }
+
 /* Toast */
 .toast {
     position: fixed;
@@ -599,7 +781,35 @@ input {
             <div class="code-number" id="code-number"></div>
             <div class="code-url" id="code-url"></div>
         </div>
+        <button class="shop-mode-btn" id="shop-mode-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+            Tryb sklepowy
+        </button>
         <div class="brightness-hint">💡 Zwiększ jasność ekranu, aby ułatwić skanowanie</div>
+    </div>
+</div>
+
+<!-- ============ EKRAN TRYBU SKLEPOWEGO ============ -->
+<div id="shop-mode-screen" class="screen">
+    <div class="shop-banner" id="shop-banner">
+        <div class="shop-banner-name" id="shop-banner-name"></div>
+        <button class="shop-close-btn" id="shop-close-btn" aria-label="Zakończ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
+    <div class="shop-code-area">
+        <div class="shop-code-wrap" id="shop-code-wrap"></div>
+        <div class="shop-code-number" id="shop-code-number"></div>
+        <div class="shop-code-url" id="shop-code-url"></div>
+    </div>
+    <div class="shop-hint">
+        💡 <b>Pokaż ekran kasjerowi.</b> Ekran nie zgaśnie. Aby wyjść - dotknij ✕
     </div>
 </div>
 
@@ -627,11 +837,29 @@ input {
 
         <div class="section-divider"></div>
 
+        <div class="form-row">
+            <label>Sortowanie kart</label>
+            <select class="form-select" id="sort-select">
+                <option value="usage">Wg częstości użycia (domyślnie)</option>
+                <option value="alpha">Alfabetycznie</option>
+                <option value="manual">Ręczne (kolejność z pliku)</option>
+            </select>
+        </div>
+
+        <div class="section-divider"></div>
+
         <div class="menu-item" id="add-card-menu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <div class="menu-item-text">
                 <div class="menu-item-title">Dodaj kartę</div>
                 <div class="menu-item-sub">Nowa karta lojalnościowa</div>
+            </div>
+        </div>
+        <div class="menu-item" id="stats-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <div class="menu-item-text">
+                <div class="menu-item-title">Statystyki użycia</div>
+                <div class="menu-item-sub">Liczniki + opcja wyzerowania</div>
             </div>
         </div>
         <div class="menu-item" id="export-menu">
@@ -651,6 +879,22 @@ input {
 
         <div class="modal-actions">
             <button class="btn-cancel" id="settings-close">Zamknij</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ MODAL: STATYSTYKI ============ -->
+<div class="modal-backdrop" id="stats-modal">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Statystyki użycia</div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1rem;">
+            Liczniki są zapisywane lokalnie na tym urządzeniu.
+        </p>
+        <div id="stats-list"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="stats-close">Zamknij</button>
+            <button class="btn-save" id="stats-reset" style="background: var(--danger);">Wyzeruj wszystko</button>
         </div>
     </div>
 </div>
@@ -718,9 +962,11 @@ input {
 const STATE = {
     password: null,
     cards: [],
-    settings: { font: 'system', size: 16 },
+    settings: { font: 'system', size: 16, sort: 'usage' },
+    usage: {}, // { cardId: count }
     currentCardId: null,
     editingCardId: null,
+    wakeLock: null, // dla trybu sklepowego
 };
 
 // ============ DOSTĘPNE CZCIONKI ============
@@ -870,6 +1116,40 @@ function saveSettings() {
     applySettings();
 }
 
+function loadUsage() {
+    const u = localStorage.getItem('usage');
+    if (u) {
+        try { STATE.usage = JSON.parse(u) || {}; } catch { STATE.usage = {}; }
+    }
+}
+
+function saveUsage() {
+    localStorage.setItem('usage', JSON.stringify(STATE.usage));
+}
+
+function bumpUsage(cardId) {
+    STATE.usage[cardId] = (STATE.usage[cardId] || 0) + 1;
+    saveUsage();
+}
+
+function getSortedCards() {
+    const cards = [...STATE.cards];
+    const mode = STATE.settings.sort || 'usage';
+    if (mode === 'alpha') {
+        cards.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+    } else if (mode === 'usage') {
+        cards.sort((a, b) => {
+            const ua = STATE.usage[a.id] || 0;
+            const ub = STATE.usage[b.id] || 0;
+            if (ub !== ua) return ub - ua;
+            // Tie-breaker: alfabetycznie
+            return a.name.localeCompare(b.name, 'pl');
+        });
+    }
+    // 'manual' - zostawia kolejność z pliku
+    return cards;
+}
+
 function applySettings() {
     const f = FONTS.find(x => x.id === STATE.settings.font) || FONTS[0];
     document.documentElement.style.setProperty('--user-font', f.stack);
@@ -887,10 +1167,17 @@ function renderCardsList() {
     const grid = document.getElementById('cards-grid');
     grid.innerHTML = '';
 
-    document.getElementById('cards-count').textContent =
-        STATE.cards.length === 0 ? 'Brak kart' : `Karty lojalnościowe (${STATE.cards.length})`;
+    const sortLabel = {
+        usage: 'wg częstości',
+        alpha: 'alfabetycznie',
+        manual: 'kolejność własna'
+    }[STATE.settings.sort || 'usage'];
 
-    STATE.cards.forEach(card => {
+    document.getElementById('cards-count').textContent =
+        STATE.cards.length === 0 ? 'Brak kart' : `Karty (${STATE.cards.length}) · ${sortLabel}`;
+
+    const sorted = getSortedCards();
+    sorted.forEach(card => {
         const tile = document.createElement('button');
         tile.className = 'card-tile';
         tile.style.background = card.bg || '#1a1a1a';
@@ -920,6 +1207,7 @@ function openCard(id) {
     const card = STATE.cards.find(c => c.id === id);
     if (!card) return;
     STATE.currentCardId = id;
+    bumpUsage(id);
 
     document.getElementById('card-name').textContent = card.name;
     document.getElementById('banner-name').textContent = card.name;
@@ -970,17 +1258,101 @@ function openCard(id) {
     document.getElementById('code-url').textContent = isUrl ? card.value : '';
 
     showScreen('card-screen');
-
-    // Maks jasność (próba) - iOS nie pozwala, ale damy hint w UI
-    requestMaxBrightness();
 }
 
-function requestMaxBrightness() {
-    // iOS Safari blokuje, ale na Androidzie/innych może zadziałać
-    if (screen.brightness && screen.brightness.set) {
-        try { screen.brightness.set(1.0); } catch {}
+// ============ TRYB SKLEPOWY ============
+async function enterShopMode() {
+    if (!STATE.currentCardId) return;
+    const card = STATE.cards.find(c => c.id === STATE.currentCardId);
+    if (!card) return;
+
+    // Banner z kolorami sklepu
+    const banner = document.getElementById('shop-banner');
+    banner.style.background = card.bg || '#1a1a1a';
+    banner.style.color = card.fg || '#ffffff';
+    document.getElementById('shop-banner-name').textContent = card.name;
+
+    // Kod
+    const wrap = document.getElementById('shop-code-wrap');
+    wrap.innerHTML = '';
+    wrap.className = 'shop-code-wrap';
+
+    const isUrl = /^https?:\/\//i.test(card.value);
+
+    if (card.type === 'qr') {
+        wrap.classList.add('qr');
+        const container = document.createElement('div');
+        wrap.appendChild(container);
+        try {
+            new QRCode(container, {
+                text: card.value,
+                width: 340,
+                height: 340,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M,
+            });
+        } catch (e) {
+            wrap.innerHTML = `<div style="color:#c00; padding: 1rem;">Błąd QR: ${escapeHtml(e.message)}</div>`;
+        }
+    } else {
+        wrap.classList.add('barcode');
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        wrap.appendChild(svg);
+        try {
+            JsBarcode(svg, card.value, {
+                format: card.type,
+                width: 3,
+                height: 140,
+                displayValue: false,
+                margin: 0,
+            });
+        } catch (e) {
+            wrap.innerHTML = `<div style="color:#c00; padding: 1rem;">Błąd kodu: ${escapeHtml(e.message)}</div>`;
+        }
+    }
+
+    document.getElementById('shop-code-number').textContent = isUrl ? '' : card.value;
+    document.getElementById('shop-code-url').textContent = isUrl ? card.value : '';
+
+    showScreen('shop-mode-screen');
+
+    // Wake Lock - ekran nie gaśnie
+    await acquireWakeLock();
+}
+
+async function exitShopMode() {
+    releaseWakeLock();
+    showScreen('card-screen');
+}
+
+async function acquireWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            STATE.wakeLock = await navigator.wakeLock.request('screen');
+            STATE.wakeLock.addEventListener('release', () => {
+                // Cichy log - wake lock może być zwolniony np. przy minimalizacji
+            });
+        } catch (e) {
+            console.warn('Wake Lock nie dostępny:', e);
+        }
     }
 }
+
+function releaseWakeLock() {
+    if (STATE.wakeLock) {
+        try { STATE.wakeLock.release(); } catch {}
+        STATE.wakeLock = null;
+    }
+}
+
+// Re-acquire wake lock gdy aplikacja wraca do focusu (np. po blokadzie ekranu)
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible'
+        && document.getElementById('shop-mode-screen').classList.contains('active')) {
+        acquireWakeLock();
+    }
+});
 
 // ============ MODAL: DODAJ/EDYTUJ ============
 function openCardModal(id) {
@@ -1043,6 +1415,41 @@ function deleteCurrentCardInModal() {
     showToast('Karta usunięta. Pamiętaj o eksporcie i aktualizacji na GitHubie.');
 }
 
+// ============ STATYSTYKI ============
+function showStatsModal() {
+    const list = document.getElementById('stats-list');
+    list.innerHTML = '';
+    if (STATE.cards.length === 0) {
+        list.innerHTML = '<div class="stats-empty">Brak kart.</div>';
+    } else {
+        // Sortuj po liczniku malejąco
+        const sorted = [...STATE.cards].sort((a, b) =>
+            (STATE.usage[b.id] || 0) - (STATE.usage[a.id] || 0)
+        );
+        sorted.forEach(c => {
+            const count = STATE.usage[c.id] || 0;
+            const row = document.createElement('div');
+            row.className = 'stat-row';
+            row.innerHTML = `
+                <div class="stat-color" style="background:${escapeHtml(c.bg)}; color:${escapeHtml(c.fg)}">${escapeHtml(c.name.slice(0,2))}</div>
+                <div class="stat-name">${escapeHtml(c.name)}</div>
+                <div class="stat-count ${count === 0 ? 'zero' : ''}">${count}</div>
+            `;
+            list.appendChild(row);
+        });
+    }
+    document.getElementById('stats-modal').classList.add('active');
+}
+
+function resetStats() {
+    if (!confirm('Wyzerować wszystkie liczniki użycia?')) return;
+    STATE.usage = {};
+    saveUsage();
+    showStatsModal(); // odśwież widok
+    renderCardsList(); // przesortuj listę
+    showToast('Liczniki wyzerowane');
+}
+
 // ============ EKSPORT ============
 async function exportEncrypted() {
     if (!STATE.password) return;
@@ -1095,6 +1502,15 @@ function populateSettings() {
         sizeVal.textContent = STATE.settings.size + 'px';
         saveSettings();
     });
+
+    // Sortowanie
+    const sortSel = document.getElementById('sort-select');
+    sortSel.value = STATE.settings.sort || 'usage';
+    sortSel.addEventListener('change', () => {
+        STATE.settings.sort = sortSel.value;
+        saveSettings();
+        renderCardsList();
+    });
 }
 
 // ============ LOGOWANIE ============
@@ -1132,6 +1548,7 @@ async function autoLogin() {
 // ============ INIT ============
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
+    loadUsage();
     populateSettings();
 
     // LOGIN
@@ -1152,6 +1569,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // NAWIGACJA
     document.getElementById('back-btn').addEventListener('click', () => {
         STATE.currentCardId = null;
+        renderCardsList(); // odśwież sortowanie po użyciu karty
         showScreen('home-screen');
     });
     document.getElementById('card-menu-btn').addEventListener('click', () => {
@@ -1175,6 +1593,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('settings-modal').classList.remove('active');
         openCardModal(null);
     });
+    document.getElementById('stats-menu').addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.remove('active');
+        showStatsModal();
+    });
+    document.getElementById('stats-close').addEventListener('click', () => {
+        document.getElementById('stats-modal').classList.remove('active');
+    });
+    document.getElementById('stats-reset').addEventListener('click', resetStats);
+    document.getElementById('stats-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'stats-modal') e.currentTarget.classList.remove('active');
+    });
+
+    // Tryb sklepowy
+    document.getElementById('shop-mode-btn').addEventListener('click', enterShopMode);
+    document.getElementById('shop-close-btn').addEventListener('click', exitShopMode);
     document.getElementById('export-menu').addEventListener('click', exportEncrypted);
     document.getElementById('logout-menu').addEventListener('click', () => {
         if (!confirm('Zablokować aplikację i usunąć zapamiętane urządzenie?')) return;
