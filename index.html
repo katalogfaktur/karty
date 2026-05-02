@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Karty">
+<meta name="theme-color" content="#0a0a14">
+<title>Moje Karty</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+
+<!-- Biblioteki lokalnie (offline-first) -->
+<script src="lib/JsBarcode.all.min.js"></script>
+<script src="lib/qrcode.min.js"></script>
+
+<style>
+:root {
+    --bg: #0a0a14;
+    --bg-elevated: #16162a;
+    --bg-elevated-2: #1f1f3a;
+    --text: #ffffff;
+    --text-dim: #9b9bb0;
+    --accent: #b794f6;
+    --accent-2: #7c5fd9;
+    --danger: #ff6b6b;
+    --success: #51cf66;
+    --border: rgba(255,255,255,0.08);
+    --shadow: 0 8px 24px rgba(0,0,0,0.4);
+    --radius: 22px;
+    --radius-sm: 14px;
+
+    /* User-konfigurowalne */
+    --user-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    --user-size: 16px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--user-font);
+    font-size: var(--user-size);
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    background:
+        radial-gradient(ellipse at top, rgba(124, 95, 217, 0.15), transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(183, 148, 246, 0.08), transparent 50%),
+        var(--bg);
+}
+
+button {
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+}
+
+input {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* ============ EKRANY ============ */
+.screen {
+    position: fixed;
+    inset: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+.screen.active { display: flex; }
+
+/* ============ LOGIN ============ */
+#login-screen {
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+.login-box {
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+}
+.login-logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+}
+.login-logo svg { width: 44px; height: 44px; color: white; }
+.login-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem; }
+.login-sub { color: var(--text-dim); margin-bottom: 2rem; font-size: 0.95rem; }
+.password-wrap { position: relative; margin-bottom: 1rem; }
+#password-input {
+    width: 100%;
+    padding: 16px 50px 16px 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+#password-input:focus { border-color: var(--accent); }
+.toggle-pwd {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 8px;
+    color: var(--text-dim);
+    display: flex;
+}
+.toggle-pwd svg { width: 20px; height: 20px; }
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: transform 0.1s, opacity 0.2s;
+    box-shadow: 0 4px 14px rgba(124,95,217,0.4);
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; }
+.remember-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+}
+.remember-row input { accent-color: var(--accent); width: 18px; height: 18px; }
+.error-msg {
+    color: var(--danger);
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    min-height: 1.2rem;
+}
+
+/* ============ HEADER ============ */
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem 0.5rem;
+    flex-shrink: 0;
+}
+.header-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+.header-actions { display: flex; gap: 8px; }
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    transition: background 0.2s, transform 0.1s;
+}
+.icon-btn:active { transform: scale(0.92); background: var(--bg-elevated-2); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* ============ LISTA KART ============ */
+.cards-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 1.25rem 2rem;
+    -webkit-overflow-scrolling: touch;
+}
+.section-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.section-title { font-size: 1.05rem; font-weight: 600; color: var(--text-dim); }
+.cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.card-tile {
+    aspect-ratio: 1.4 / 1;
+    border-radius: var(--radius);
+    padding: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+}
+.card-tile:active {
+    transform: scale(0.96);
+}
+.card-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%);
+    pointer-events: none;
+}
+.card-logo-text {
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    text-align: center;
+    line-height: 1.1;
+    z-index: 1;
+}
+.add-tile {
+    aspect-ratio: 1.4 / 1;
+    border-radius: var(--radius);
+    border: 2px dashed var(--border);
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    gap: 6px;
+    transition: border-color 0.2s, color 0.2s;
+}
+.add-tile:active { border-color: var(--accent); color: var(--accent); }
+.add-tile svg { width: 28px; height: 28px; }
+.add-tile span { font-size: 0.85rem; font-weight: 500; }
+.empty-msg {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-dim);
+    grid-column: 1 / -1;
+}
+
+/* ============ WIDOK KARTY ============ */
+#card-screen { background: var(--bg); }
+.card-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    flex-shrink: 0;
+    gap: 12px;
+}
+.card-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+    margin-right: 40px; /* żeby było wycentrowane mimo guzika powrotu */
+}
+.card-display {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 1.25rem 2rem;
+    -webkit-overflow-scrolling: touch;
+}
+.card-banner {
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+.card-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%);
+    pointer-events: none;
+}
+.banner-name {
+    font-weight: 700;
+    font-size: 1.3rem;
+    z-index: 1;
+}
+.code-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 2rem 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+.code-svg-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+}
+.code-svg-wrap svg { max-width: 100%; height: auto; }
+.code-svg-wrap canvas { max-width: 100%; height: auto; }
+.code-number {
+    color: #1a1a1a;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    font-weight: 500;
+    word-break: break-all;
+    letter-spacing: 0.02em;
+}
+.code-url {
+    color: #555;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    word-break: break-all;
+}
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+.action-btn {
+    flex: 1;
+    padding: 14px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: background 0.2s, transform 0.1s;
+}
+.action-btn:active { transform: scale(0.97); background: var(--bg-elevated-2); }
+.action-btn.danger { color: var(--danger); }
+.action-btn svg { width: 18px; height: 18px; }
+.brightness-hint {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* ============ MODALE ============ */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: flex-end;
+    z-index: 100;
+    animation: fadeIn 0.2s;
+}
+.modal-backdrop.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal {
+    width: 100%;
+    background: var(--bg-elevated);
+    border-radius: 24px 24px 0 0;
+    padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    -webkit-overflow-scrolling: touch;
+}
+.modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--text-dim);
+    opacity: 0.3;
+    border-radius: 2px;
+    margin: 0 auto 1.25rem;
+}
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+}
+.form-row { margin-bottom: 1rem; }
+.form-row label {
+    display: block;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    font-size: 0.95rem;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+.form-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239b9bb0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px; padding-right: 38px; }
+.color-row { display: flex; gap: 10px; }
+.color-row input[type="color"] {
+    width: 50px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    cursor: pointer;
+}
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1.5rem;
+}
+.modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 600;
+}
+.btn-cancel { background: var(--bg-elevated-2); color: var(--text); }
+.btn-save { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; }
+.btn-cancel:active, .btn-save:active { transform: scale(0.98); }
+
+/* Sample preview w ustawieniach czcionki */
+.font-preview {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+.font-preview-text { font-weight: 600; }
+.font-preview-num { font-size: 1.4rem; letter-spacing: 0.05em; margin-top: 0.5rem; }
+
+.size-row { display: flex; align-items: center; gap: 12px; }
+.size-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.size-row .size-val { min-width: 50px; text-align: right; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+.section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+}
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: var(--bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: background 0.2s;
+}
+.menu-item:active { background: var(--bg-elevated-2); }
+.menu-item svg { width: 20px; height: 20px; color: var(--text-dim); }
+.menu-item-text { flex: 1; }
+.menu-item-title { font-weight: 500; }
+.menu-item-sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
+.menu-item.danger { color: var(--danger); }
+.menu-item.danger svg { color: var(--danger); }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: calc(2rem + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    background: var(--bg-elevated-2);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 200;
+    font-size: 0.9rem;
+    max-width: 90%;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Scrollbar hidden */
+::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ EKRAN LOGOWANIA ============ -->
+<div id="login-screen" class="screen active">
+    <div class="login-box">
+        <div class="login-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                <path d="M22 10H2"/>
+                <path d="M7 15h.01"/>
+                <path d="M11 15h2"/>
+            </svg>
+        </div>
+        <h1 class="login-title">Moje Karty</h1>
+        <p class="login-sub" id="login-sub">Wpisz hasło, aby odblokować</p>
+        <form id="login-form" autocomplete="off">
+            <div class="password-wrap">
+                <input type="password" id="password-input" placeholder="Hasło" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+                <button type="button" class="toggle-pwd" id="toggle-pwd" aria-label="Pokaż hasło">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+            <label class="remember-row">
+                <input type="checkbox" id="remember-cb" checked>
+                <span>Zapamiętaj to urządzenie</span>
+            </label>
+            <button type="submit" class="btn-primary" id="login-btn">Odblokuj</button>
+            <div class="error-msg" id="login-error"></div>
+        </form>
+    </div>
+</div>
+
+<!-- ============ EKRAN GŁÓWNY (LISTA KART) ============ -->
+<div id="home-screen" class="screen">
+    <div class="app-header">
+        <h1 class="header-title">Moje Karty</h1>
+        <div class="header-actions">
+            <button class="icon-btn" id="settings-btn" aria-label="Ustawienia">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div class="cards-scroll">
+        <div class="section-row">
+            <span class="section-title" id="cards-count">Karty lojalnościowe</span>
+        </div>
+        <div class="cards-grid" id="cards-grid"></div>
+    </div>
+</div>
+
+<!-- ============ EKRAN KARTY ============ -->
+<div id="card-screen" class="screen">
+    <div class="card-header">
+        <button class="icon-btn" id="back-btn" aria-label="Wstecz">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+        <div class="card-name" id="card-name"></div>
+        <button class="icon-btn" id="card-menu-btn" aria-label="Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+            </svg>
+        </button>
+    </div>
+    <div class="card-display">
+        <div class="card-banner" id="card-banner">
+            <div class="banner-name" id="banner-name"></div>
+        </div>
+        <div class="code-card" id="code-card">
+            <div class="code-svg-wrap" id="code-svg-wrap"></div>
+            <div class="code-number" id="code-number"></div>
+            <div class="code-url" id="code-url"></div>
+        </div>
+        <div class="brightness-hint">💡 Zwiększ jasność ekranu, aby ułatwić skanowanie</div>
+    </div>
+</div>
+
+<!-- ============ MODAL: USTAWIENIA ============ -->
+<div class="modal-backdrop" id="settings-modal">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Ustawienia</div>
+
+        <div class="form-row">
+            <label>Krój pisma</label>
+            <select class="form-select" id="font-select"></select>
+        </div>
+        <div class="form-row">
+            <label>Rozmiar tekstu</label>
+            <div class="size-row">
+                <input type="range" id="size-range" min="13" max="22" step="1">
+                <span class="size-val" id="size-val"></span>
+            </div>
+        </div>
+        <div class="font-preview">
+            <div class="font-preview-text">Karta lojalnościowa</div>
+            <div class="font-preview-num">9 955 388 661 422</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="menu-item" id="add-card-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <div class="menu-item-text">
+                <div class="menu-item-title">Dodaj kartę</div>
+                <div class="menu-item-sub">Nowa karta lojalnościowa</div>
+            </div>
+        </div>
+        <div class="menu-item" id="export-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <div class="menu-item-text">
+                <div class="menu-item-title">Eksportuj zaszyfrowany plik</div>
+                <div class="menu-item-sub">Aby zaktualizować na GitHub</div>
+            </div>
+        </div>
+        <div class="menu-item danger" id="logout-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <div class="menu-item-text">
+                <div class="menu-item-title">Zablokuj i wyloguj</div>
+                <div class="menu-item-sub">Usuń zapamiętane urządzenie</div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" id="settings-close">Zamknij</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ MODAL: DODAJ/EDYTUJ KARTĘ ============ -->
+<div class="modal-backdrop" id="card-modal">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="card-modal-title">Dodaj kartę</div>
+
+        <div class="form-row">
+            <label>Nazwa</label>
+            <input type="text" class="form-input" id="cm-name" placeholder="np. Biedronka">
+        </div>
+        <div class="form-row">
+            <label>Typ kodu</label>
+            <select class="form-select" id="cm-type">
+                <option value="qr">QR Code</option>
+                <option value="CODE128">Kod kreskowy CODE128</option>
+                <option value="EAN13">Kod kreskowy EAN-13</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label>Wartość kodu (numer lub URL)</label>
+            <textarea class="form-textarea" id="cm-value" placeholder="np. 9955388661422 lub https://..."></textarea>
+        </div>
+        <div class="form-row">
+            <label>Kolor tła</label>
+            <div class="color-row">
+                <input type="color" id="cm-bg" value="#FFC107">
+                <input type="text" class="form-input" id="cm-bg-text" value="#FFC107">
+            </div>
+        </div>
+        <div class="form-row">
+            <label>Kolor tekstu</label>
+            <div class="color-row">
+                <input type="color" id="cm-fg" value="#E30613">
+                <input type="text" class="form-input" id="cm-fg-text" value="#E30613">
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" id="cm-cancel">Anuluj</button>
+            <button class="btn-save" id="cm-save">Zapisz</button>
+        </div>
+        <button class="action-btn danger" id="cm-delete" style="display:none; margin-top: 0.75rem; width: 100%;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            Usuń kartę
+        </button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================================================================
+   APLIKACJA "MOJE KARTY"
+   - Szyfrowanie: AES-GCM 256, klucz wyprowadzany przez PBKDF2
+   - Kody przechowywane w cards.enc.json (base64)
+   - "Zapamiętanie urządzenia" zapisuje hasło zaszyfrowane kluczem
+     wyprowadzonym z deviceFingerprint w localStorage
+   ================================================================== */
+
+const STATE = {
+    password: null,
+    cards: [],
+    settings: { font: 'system', size: 16 },
+    currentCardId: null,
+    editingCardId: null,
+};
+
+// ============ DOSTĘPNE CZCIONKI ============
+const FONTS = [
+    { id: 'system', name: 'Systemowa (SF Pro)', stack: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" },
+    { id: 'sf-mono', name: 'SF Mono', stack: "ui-monospace, 'SF Mono', Menlo, monospace" },
+    { id: 'helvetica', name: 'Helvetica Neue', stack: "'Helvetica Neue', Helvetica, sans-serif" },
+    { id: 'avenir', name: 'Avenir Next', stack: "'Avenir Next', Avenir, sans-serif" },
+    { id: 'georgia', name: 'Georgia', stack: "Georgia, 'Times New Roman', serif" },
+    { id: 'palatino', name: 'Palatino', stack: "Palatino, 'Palatino Linotype', serif" },
+    { id: 'times', name: 'Times New Roman', stack: "'Times New Roman', Times, serif" },
+    { id: 'courier', name: 'Courier New', stack: "'Courier New', Courier, monospace" },
+    { id: 'menlo', name: 'Menlo', stack: "Menlo, monospace" },
+    { id: 'monaco', name: 'Monaco', stack: "Monaco, monospace" },
+    { id: 'arial', name: 'Arial', stack: "Arial, sans-serif" },
+    { id: 'arial-rounded', name: 'Arial Rounded', stack: "'Arial Rounded MT Bold', Arial, sans-serif" },
+    { id: 'verdana', name: 'Verdana', stack: "Verdana, Geneva, sans-serif" },
+    { id: 'tahoma', name: 'Tahoma', stack: "Tahoma, sans-serif" },
+    { id: 'trebuchet', name: 'Trebuchet MS', stack: "'Trebuchet MS', sans-serif" },
+    { id: 'gill-sans', name: 'Gill Sans', stack: "'Gill Sans', 'Gill Sans MT', sans-serif" },
+    { id: 'futura', name: 'Futura', stack: "Futura, 'Trebuchet MS', sans-serif" },
+    { id: 'optima', name: 'Optima', stack: "Optima, sans-serif" },
+    { id: 'didot', name: 'Didot', stack: "Didot, 'Bodoni MT', serif" },
+    { id: 'baskerville', name: 'Baskerville', stack: "Baskerville, 'Baskerville Old Face', serif" },
+];
+
+// ============ KRYPTOGRAFIA ============
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+function bufToB64(buf) {
+    const bytes = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+}
+function b64ToBuf(b64) {
+    const s = atob(b64);
+    const bytes = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
+    return bytes.buffer;
+}
+
+async function deriveKey(password, salt, iterations = 250000) {
+    const baseKey = await crypto.subtle.importKey(
+        'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+async function encryptJSON(obj, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+    const ct = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        enc.encode(JSON.stringify(obj))
+    );
+    return {
+        v: 1,
+        salt: bufToB64(salt),
+        iv: bufToB64(iv),
+        data: bufToB64(ct),
+    };
+}
+
+async function decryptJSON(payload, password) {
+    const salt = new Uint8Array(b64ToBuf(payload.salt));
+    const iv = new Uint8Array(b64ToBuf(payload.iv));
+    const data = b64ToBuf(payload.data);
+    const key = await deriveKey(password, salt);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+    return JSON.parse(dec.decode(pt));
+}
+
+// ============ DEVICE FINGERPRINT ============
+// "Zapamiętanie urządzenia" = lokalne szyfrowanie hasła kluczem wyprowadzonym
+// z fingerprintu urządzenia. Bez fingerprintu, ktoś z dostępem do localStorage
+// nadal nie odczyta hasła.
+async function getDeviceFingerprint() {
+    // Stabilne cechy urządzenia + losowy klucz wygenerowany raz i trzymany w localStorage
+    let deviceKey = localStorage.getItem('device_key');
+    if (!deviceKey) {
+        const arr = crypto.getRandomValues(new Uint8Array(32));
+        deviceKey = bufToB64(arr);
+        localStorage.setItem('device_key', deviceKey);
+    }
+    const fp = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + 'x' + screen.height,
+        screen.colorDepth,
+        new Date().getTimezoneOffset(),
+        deviceKey,
+    ].join('|');
+    return fp;
+}
+
+async function rememberPassword(password) {
+    const fp = await getDeviceFingerprint();
+    const encrypted = await encryptJSON({ p: password }, fp);
+    localStorage.setItem('remembered_pwd', JSON.stringify(encrypted));
+}
+
+async function getRememberedPassword() {
+    const stored = localStorage.getItem('remembered_pwd');
+    if (!stored) return null;
+    try {
+        const fp = await getDeviceFingerprint();
+        const obj = await decryptJSON(JSON.parse(stored), fp);
+        return obj.p;
+    } catch (e) {
+        return null;
+    }
+}
+
+function forgetDevice() {
+    localStorage.removeItem('remembered_pwd');
+    localStorage.removeItem('device_key');
+}
+
+// ============ ŁADOWANIE/ZAPIS DANYCH ============
+async function loadEncryptedCards(password) {
+    const res = await fetch('cards.enc.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('Nie można pobrać pliku z kartami');
+    const payload = await res.json();
+    return await decryptJSON(payload, password);
+}
+
+function loadSettings() {
+    const s = localStorage.getItem('settings');
+    if (s) {
+        try { Object.assign(STATE.settings, JSON.parse(s)); } catch {}
+    }
+    applySettings();
+}
+
+function saveSettings() {
+    localStorage.setItem('settings', JSON.stringify(STATE.settings));
+    applySettings();
+}
+
+function applySettings() {
+    const f = FONTS.find(x => x.id === STATE.settings.font) || FONTS[0];
+    document.documentElement.style.setProperty('--user-font', f.stack);
+    document.documentElement.style.setProperty('--user-size', STATE.settings.size + 'px');
+}
+
+// ============ EKRANY ============
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// ============ RENDEROWANIE LISTY KART ============
+function renderCardsList() {
+    const grid = document.getElementById('cards-grid');
+    grid.innerHTML = '';
+
+    document.getElementById('cards-count').textContent =
+        STATE.cards.length === 0 ? 'Brak kart' : `Karty lojalnościowe (${STATE.cards.length})`;
+
+    STATE.cards.forEach(card => {
+        const tile = document.createElement('button');
+        tile.className = 'card-tile';
+        tile.style.background = card.bg || '#1a1a1a';
+        tile.style.color = card.fg || '#ffffff';
+        tile.innerHTML = `<div class="card-logo-text">${escapeHtml(card.name)}</div>`;
+        tile.addEventListener('click', () => openCard(card.id));
+        grid.appendChild(tile);
+    });
+
+    // Tile "Dodaj"
+    const add = document.createElement('button');
+    add.className = 'add-tile';
+    add.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Dodaj kartę</span>
+    `;
+    add.addEventListener('click', () => openCardModal(null));
+    grid.appendChild(add);
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ============ WIDOK KARTY ============
+function openCard(id) {
+    const card = STATE.cards.find(c => c.id === id);
+    if (!card) return;
+    STATE.currentCardId = id;
+
+    document.getElementById('card-name').textContent = card.name;
+    document.getElementById('banner-name').textContent = card.name;
+
+    const banner = document.getElementById('card-banner');
+    banner.style.background = card.bg || '#1a1a1a';
+    banner.style.color = card.fg || '#ffffff';
+
+    const wrap = document.getElementById('code-svg-wrap');
+    wrap.innerHTML = '';
+
+    const isUrl = /^https?:\/\//i.test(card.value);
+
+    if (card.type === 'qr') {
+        // qrcodejs2 API: new QRCode(element, options)
+        const container = document.createElement('div');
+        container.style.cssText = 'display:inline-block;';
+        wrap.appendChild(container);
+        try {
+            new QRCode(container, {
+                text: card.value,
+                width: 260,
+                height: 260,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M,
+            });
+        } catch (e) {
+            wrap.innerHTML = `<div style="color:#c00; padding: 1rem;">Błąd QR: ${escapeHtml(e.message)}</div>`;
+        }
+    } else {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        wrap.appendChild(svg);
+        try {
+            JsBarcode(svg, card.value, {
+                format: card.type,
+                width: 2.5,
+                height: 90,
+                displayValue: false,
+                margin: 0,
+            });
+        } catch (e) {
+            wrap.innerHTML = `<div style="color:#c00; padding: 1rem;">Błąd kodu: ${escapeHtml(e.message)}</div>`;
+        }
+    }
+
+    document.getElementById('code-number').textContent = isUrl ? '' : card.value;
+    document.getElementById('code-url').textContent = isUrl ? card.value : '';
+
+    showScreen('card-screen');
+
+    // Maks jasność (próba) - iOS nie pozwala, ale damy hint w UI
+    requestMaxBrightness();
+}
+
+function requestMaxBrightness() {
+    // iOS Safari blokuje, ale na Androidzie/innych może zadziałać
+    if (screen.brightness && screen.brightness.set) {
+        try { screen.brightness.set(1.0); } catch {}
+    }
+}
+
+// ============ MODAL: DODAJ/EDYTUJ ============
+function openCardModal(id) {
+    STATE.editingCardId = id;
+    const card = id ? STATE.cards.find(c => c.id === id) : null;
+    document.getElementById('card-modal-title').textContent = card ? 'Edytuj kartę' : 'Dodaj kartę';
+    document.getElementById('cm-name').value = card?.name || '';
+    document.getElementById('cm-type').value = card?.type || 'qr';
+    document.getElementById('cm-value').value = card?.value || '';
+    const bg = card?.bg || '#FFC107';
+    const fg = card?.fg || '#E30613';
+    document.getElementById('cm-bg').value = bg;
+    document.getElementById('cm-bg-text').value = bg;
+    document.getElementById('cm-fg').value = fg;
+    document.getElementById('cm-fg-text').value = fg;
+    document.getElementById('cm-delete').style.display = card ? 'flex' : 'none';
+    document.getElementById('card-modal').classList.add('active');
+}
+
+function closeCardModal() {
+    document.getElementById('card-modal').classList.remove('active');
+    STATE.editingCardId = null;
+}
+
+async function saveCard() {
+    const name = document.getElementById('cm-name').value.trim();
+    const type = document.getElementById('cm-type').value;
+    const value = document.getElementById('cm-value').value.trim();
+    const bg = document.getElementById('cm-bg-text').value.trim() || '#1a1a1a';
+    const fg = document.getElementById('cm-fg-text').value.trim() || '#ffffff';
+
+    if (!name || !value) {
+        showToast('Uzupełnij nazwę i wartość kodu');
+        return;
+    }
+
+    if (STATE.editingCardId) {
+        const idx = STATE.cards.findIndex(c => c.id === STATE.editingCardId);
+        if (idx >= 0) {
+            STATE.cards[idx] = { ...STATE.cards[idx], name, type, value, bg, fg };
+        }
+    } else {
+        STATE.cards.push({
+            id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            name, type, value, bg, fg,
+        });
+    }
+
+    closeCardModal();
+    renderCardsList();
+    showToast('💾 Zapisano lokalnie. Aby zsynchronizować z drugim telefonem, eksportuj plik i wgraj na GitHub.');
+}
+
+function deleteCurrentCardInModal() {
+    if (!STATE.editingCardId) return;
+    if (!confirm('Usunąć tę kartę?')) return;
+    STATE.cards = STATE.cards.filter(c => c.id !== STATE.editingCardId);
+    closeCardModal();
+    renderCardsList();
+    showToast('Karta usunięta. Pamiętaj o eksporcie i aktualizacji na GitHubie.');
+}
+
+// ============ EKSPORT ============
+async function exportEncrypted() {
+    if (!STATE.password) return;
+    const payload = await encryptJSON(STATE.cards, STATE.password);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cards.enc.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Plik pobrany. Wgraj go do repo na GitHubie.');
+}
+
+// ============ TOAST ============
+let toastTimer;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ============ POPULOWANIE UI USTAWIEŃ ============
+function populateSettings() {
+    const sel = document.getElementById('font-select');
+    sel.innerHTML = '';
+    FONTS.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.id;
+        opt.textContent = f.name;
+        opt.style.fontFamily = f.stack;
+        sel.appendChild(opt);
+    });
+    sel.value = STATE.settings.font;
+    sel.addEventListener('change', () => {
+        STATE.settings.font = sel.value;
+        saveSettings();
+    });
+
+    const range = document.getElementById('size-range');
+    const sizeVal = document.getElementById('size-val');
+    range.value = STATE.settings.size;
+    sizeVal.textContent = STATE.settings.size + 'px';
+    range.addEventListener('input', () => {
+        STATE.settings.size = parseInt(range.value, 10);
+        sizeVal.textContent = STATE.settings.size + 'px';
+        saveSettings();
+    });
+}
+
+// ============ LOGOWANIE ============
+async function tryLogin(password, remember) {
+    try {
+        const cards = await loadEncryptedCards(password);
+        STATE.password = password;
+        STATE.cards = Array.isArray(cards) ? cards : [];
+        if (remember) {
+            await rememberPassword(password);
+        }
+        renderCardsList();
+        showScreen('home-screen');
+    } catch (e) {
+        document.getElementById('login-error').textContent =
+            e.message.includes('pobrać') ? e.message : 'Nieprawidłowe hasło lub uszkodzony plik';
+        document.getElementById('login-btn').disabled = false;
+    }
+}
+
+async function autoLogin() {
+    const remembered = await getRememberedPassword();
+    if (remembered) {
+        document.getElementById('login-sub').textContent = 'Odblokowywanie...';
+        document.getElementById('login-btn').disabled = true;
+        await tryLogin(remembered, false);
+        if (!STATE.password) {
+            // auto nie wyszło - pokaż formularz
+            document.getElementById('login-sub').textContent = 'Wpisz hasło, aby odblokować';
+            document.getElementById('login-btn').disabled = false;
+        }
+    }
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', () => {
+    loadSettings();
+    populateSettings();
+
+    // LOGIN
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pwd = document.getElementById('password-input').value;
+        if (!pwd) return;
+        document.getElementById('login-error').textContent = '';
+        document.getElementById('login-btn').disabled = true;
+        await tryLogin(pwd, document.getElementById('remember-cb').checked);
+    });
+
+    document.getElementById('toggle-pwd').addEventListener('click', () => {
+        const inp = document.getElementById('password-input');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    });
+
+    // NAWIGACJA
+    document.getElementById('back-btn').addEventListener('click', () => {
+        STATE.currentCardId = null;
+        showScreen('home-screen');
+    });
+    document.getElementById('card-menu-btn').addEventListener('click', () => {
+        if (STATE.currentCardId) openCardModal(STATE.currentCardId);
+    });
+
+    // USTAWIENIA
+    document.getElementById('settings-btn').addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.add('active');
+    });
+    document.getElementById('settings-close').addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.remove('active');
+    });
+    document.getElementById('settings-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'settings-modal') {
+            e.currentTarget.classList.remove('active');
+        }
+    });
+
+    document.getElementById('add-card-menu').addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.remove('active');
+        openCardModal(null);
+    });
+    document.getElementById('export-menu').addEventListener('click', exportEncrypted);
+    document.getElementById('logout-menu').addEventListener('click', () => {
+        if (!confirm('Zablokować aplikację i usunąć zapamiętane urządzenie?')) return;
+        forgetDevice();
+        STATE.password = null;
+        STATE.cards = [];
+        document.getElementById('password-input').value = '';
+        document.getElementById('login-error').textContent = '';
+        document.getElementById('settings-modal').classList.remove('active');
+        showScreen('login-screen');
+    });
+
+    // CARD MODAL
+    document.getElementById('cm-cancel').addEventListener('click', closeCardModal);
+    document.getElementById('cm-save').addEventListener('click', saveCard);
+    document.getElementById('cm-delete').addEventListener('click', deleteCurrentCardInModal);
+    document.getElementById('card-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'card-modal') closeCardModal();
+    });
+
+    // Synchronizacja color picker <-> text
+    ['bg', 'fg'].forEach(key => {
+        const c = document.getElementById('cm-' + key);
+        const t = document.getElementById('cm-' + key + '-text');
+        c.addEventListener('input', () => t.value = c.value);
+        t.addEventListener('input', () => {
+            if (/^#[0-9a-fA-F]{6}$/.test(t.value)) c.value = t.value;
+        });
+    });
+
+    // Service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    // Auto-login
+    autoLogin();
+});
+</script>
+
+</body>
+</html>

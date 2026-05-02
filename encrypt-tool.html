@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edytor kart (offline)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+    background: #f4f4f8;
+    color: #1a1a1a;
+    padding: 1rem;
+    max-width: 720px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+h1 { margin-bottom: 0.5rem; font-size: 1.5rem; }
+.note {
+    background: #fff8e1;
+    border-left: 4px solid #ffa000;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.section {
+    background: white;
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.section h2 { font-size: 1.05rem; margin-bottom: 1rem; }
+label {
+    display: block;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 4px;
+    margin-top: 0.75rem;
+    font-weight: 500;
+}
+input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: white;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: #7c5fd9; }
+textarea { resize: vertical; min-height: 60px; }
+button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #7c5fd9;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+}
+button:hover { background: #6b4fd0; }
+button.danger { background: #e74c3c; }
+button.danger:hover { background: #d63d2c; }
+button.secondary { background: #6c757d; }
+button.secondary:hover { background: #5a6268; }
+.cards-list { display: flex; flex-direction: column; gap: 8px; }
+.card-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #f8f8fa;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+.card-color {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+    padding: 2px;
+}
+.card-meta { flex: 1; min-width: 0; }
+.card-meta-name { font-weight: 600; }
+.card-meta-val { font-size: 0.8rem; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1rem; }
+.color-input-row { display: flex; gap: 8px; align-items: center; }
+.color-input-row input[type="color"] { width: 50px; height: 40px; padding: 2px; cursor: pointer; }
+.success { background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-top: 1rem; display: none; }
+.error { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-top: 1rem; display: none; }
+</style>
+</head>
+<body>
+
+<h1>🔐 Edytor kart</h1>
+<p class="note">
+    <b>Narzędzie offline.</b> Otwórz ten plik lokalnie (np. dwuklik) - dane nie opuszczają Twojego urządzenia.
+    Po edycji pobierzesz nowy plik <code>cards.enc.json</code> i wgrywasz go do swojego repo na GitHubie.
+    <br><br>
+    <b>Aby wczytać istniejący plik:</b> wybierz <code>cards.enc.json</code> i wpisz hasło, którym był zaszyfrowany.
+</p>
+
+<div class="section">
+    <h2>1. Wczytaj istniejący plik (opcjonalnie)</h2>
+    <label>Plik cards.enc.json</label>
+    <input type="file" id="file-input" accept=".json">
+    <label>Hasło dla wczytania</label>
+    <input type="password" id="load-pwd" placeholder="Hasło istniejącego pliku">
+    <div class="btn-row">
+        <button id="load-btn">Wczytaj i odszyfruj</button>
+    </div>
+    <div class="success" id="load-success"></div>
+    <div class="error" id="load-error"></div>
+</div>
+
+<div class="section">
+    <h2>2. Edytuj karty</h2>
+    <div class="cards-list" id="cards-list"></div>
+    <div class="btn-row">
+        <button id="add-btn">+ Dodaj kartę</button>
+    </div>
+</div>
+
+<div class="section" id="edit-form" style="display:none;">
+    <h2 id="edit-title">Edycja karty</h2>
+    <label>Nazwa</label>
+    <input type="text" id="ef-name">
+    <label>Typ kodu</label>
+    <select id="ef-type">
+        <option value="qr">QR Code</option>
+        <option value="CODE128">Kod kreskowy CODE128</option>
+        <option value="EAN13">Kod kreskowy EAN-13</option>
+    </select>
+    <label>Wartość (numer lub URL)</label>
+    <textarea id="ef-value"></textarea>
+    <label>Kolor tła</label>
+    <div class="color-input-row">
+        <input type="color" id="ef-bg-c">
+        <input type="text" id="ef-bg-t">
+    </div>
+    <label>Kolor tekstu</label>
+    <div class="color-input-row">
+        <input type="color" id="ef-fg-c">
+        <input type="text" id="ef-fg-t">
+    </div>
+    <div class="btn-row">
+        <button id="ef-save">Zapisz</button>
+        <button class="secondary" id="ef-cancel">Anuluj</button>
+        <button class="danger" id="ef-delete" style="display:none;">Usuń kartę</button>
+    </div>
+</div>
+
+<div class="section">
+    <h2>3. Zaszyfruj i pobierz</h2>
+    <label>Hasło (zapamiętaj je! - tym hasłem będziesz logować się w aplikacji)</label>
+    <input type="password" id="save-pwd" placeholder="Nowe lub to samo hasło">
+    <label>Powtórz hasło</label>
+    <input type="password" id="save-pwd2" placeholder="Powtórz">
+    <div class="btn-row">
+        <button id="save-btn">🔒 Zaszyfruj i pobierz cards.enc.json</button>
+    </div>
+    <div class="success" id="save-success"></div>
+    <div class="error" id="save-error"></div>
+</div>
+
+<script>
+let cards = [];
+let editingId = null;
+
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+function bufToB64(buf) { const b = new Uint8Array(buf); let s = ''; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
+function b64ToBuf(b64) { const s = atob(b64); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b.buffer; }
+
+async function deriveKey(password, salt) {
+    const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' },
+        baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+    );
+}
+
+async function encryptJSON(obj, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
+    return { v: 1, salt: bufToB64(salt), iv: bufToB64(iv), data: bufToB64(ct) };
+}
+
+async function decryptJSON(p, password) {
+    const salt = new Uint8Array(b64ToBuf(p.salt));
+    const iv = new Uint8Array(b64ToBuf(p.iv));
+    const key = await deriveKey(password, salt);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, b64ToBuf(p.data));
+    return JSON.parse(dec.decode(pt));
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function render() {
+    const list = document.getElementById('cards-list');
+    if (cards.length === 0) {
+        list.innerHTML = '<div style="color:#999; padding: 1rem; text-align:center;">Brak kart. Kliknij "Dodaj kartę".</div>';
+        return;
+    }
+    list.innerHTML = '';
+    cards.forEach(c => {
+        const d = document.createElement('div');
+        d.className = 'card-item';
+        d.innerHTML = `
+            <div class="card-color" style="background:${escapeHtml(c.bg)}; color:${escapeHtml(c.fg)}">${escapeHtml(c.name.slice(0,2))}</div>
+            <div class="card-meta">
+                <div class="card-meta-name">${escapeHtml(c.name)}</div>
+                <div class="card-meta-val">${escapeHtml(c.type)}: ${escapeHtml(c.value.slice(0, 60))}${c.value.length > 60 ? '...' : ''}</div>
+            </div>
+            <button class="secondary" data-edit="${c.id}">Edytuj</button>
+        `;
+        list.appendChild(d);
+    });
+    list.querySelectorAll('[data-edit]').forEach(b => {
+        b.addEventListener('click', () => editCard(b.dataset.edit));
+    });
+}
+
+function editCard(id) {
+    const c = cards.find(x => x.id === id);
+    if (!c) return;
+    editingId = id;
+    document.getElementById('edit-title').textContent = 'Edycja: ' + c.name;
+    document.getElementById('ef-name').value = c.name;
+    document.getElementById('ef-type').value = c.type;
+    document.getElementById('ef-value').value = c.value;
+    document.getElementById('ef-bg-c').value = c.bg;
+    document.getElementById('ef-bg-t').value = c.bg;
+    document.getElementById('ef-fg-c').value = c.fg;
+    document.getElementById('ef-fg-t').value = c.fg;
+    document.getElementById('ef-delete').style.display = 'inline-block';
+    document.getElementById('edit-form').style.display = 'block';
+    document.getElementById('edit-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function newCard() {
+    editingId = null;
+    document.getElementById('edit-title').textContent = 'Nowa karta';
+    document.getElementById('ef-name').value = '';
+    document.getElementById('ef-type').value = 'qr';
+    document.getElementById('ef-value').value = '';
+    document.getElementById('ef-bg-c').value = '#1a1a2e';
+    document.getElementById('ef-bg-t').value = '#1a1a2e';
+    document.getElementById('ef-fg-c').value = '#ffffff';
+    document.getElementById('ef-fg-t').value = '#ffffff';
+    document.getElementById('ef-delete').style.display = 'none';
+    document.getElementById('edit-form').style.display = 'block';
+    document.getElementById('edit-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function saveEdit() {
+    const name = document.getElementById('ef-name').value.trim();
+    const type = document.getElementById('ef-type').value;
+    const value = document.getElementById('ef-value').value.trim();
+    const bg = document.getElementById('ef-bg-t').value.trim();
+    const fg = document.getElementById('ef-fg-t').value.trim();
+    if (!name || !value) { alert('Wpisz nazwę i wartość'); return; }
+    if (editingId) {
+        const i = cards.findIndex(c => c.id === editingId);
+        if (i >= 0) cards[i] = { ...cards[i], name, type, value, bg, fg };
+    } else {
+        cards.push({ id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name, type, value, bg, fg });
+    }
+    document.getElementById('edit-form').style.display = 'none';
+    render();
+}
+
+function deleteEdit() {
+    if (!editingId) return;
+    if (!confirm('Usunąć kartę?')) return;
+    cards = cards.filter(c => c.id !== editingId);
+    document.getElementById('edit-form').style.display = 'none';
+    render();
+}
+
+document.getElementById('add-btn').addEventListener('click', newCard);
+document.getElementById('ef-save').addEventListener('click', saveEdit);
+document.getElementById('ef-cancel').addEventListener('click', () => document.getElementById('edit-form').style.display = 'none');
+document.getElementById('ef-delete').addEventListener('click', deleteEdit);
+
+['bg', 'fg'].forEach(k => {
+    const c = document.getElementById('ef-' + k + '-c');
+    const t = document.getElementById('ef-' + k + '-t');
+    c.addEventListener('input', () => t.value = c.value);
+    t.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(t.value)) c.value = t.value; });
+});
+
+document.getElementById('load-btn').addEventListener('click', async () => {
+    const f = document.getElementById('file-input').files[0];
+    const pwd = document.getElementById('load-pwd').value;
+    const okEl = document.getElementById('load-success');
+    const errEl = document.getElementById('load-error');
+    okEl.style.display = errEl.style.display = 'none';
+    if (!f || !pwd) { errEl.textContent = 'Wybierz plik i wpisz hasło'; errEl.style.display = 'block'; return; }
+    try {
+        const text = await f.text();
+        const payload = JSON.parse(text);
+        const decrypted = await decryptJSON(payload, pwd);
+        cards = Array.isArray(decrypted) ? decrypted : [];
+        render();
+        okEl.textContent = `Wczytano ${cards.length} kart.`;
+        okEl.style.display = 'block';
+        document.getElementById('save-pwd').value = pwd;
+        document.getElementById('save-pwd2').value = pwd;
+    } catch (e) {
+        errEl.textContent = 'Błąd: ' + (e.message || 'Nieprawidłowe hasło lub uszkodzony plik');
+        errEl.style.display = 'block';
+    }
+});
+
+document.getElementById('save-btn').addEventListener('click', async () => {
+    const p1 = document.getElementById('save-pwd').value;
+    const p2 = document.getElementById('save-pwd2').value;
+    const okEl = document.getElementById('save-success');
+    const errEl = document.getElementById('save-error');
+    okEl.style.display = errEl.style.display = 'none';
+    if (!p1) { errEl.textContent = 'Wpisz hasło'; errEl.style.display = 'block'; return; }
+    if (p1 !== p2) { errEl.textContent = 'Hasła się różnią'; errEl.style.display = 'block'; return; }
+    if (p1.length < 8) { errEl.textContent = 'Hasło min. 8 znaków'; errEl.style.display = 'block'; return; }
+    if (cards.length === 0) { if (!confirm('Brak kart. Mimo to zapisać pusty plik?')) return; }
+
+    try {
+        const payload = await encryptJSON(cards, p1);
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cards.enc.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        okEl.textContent = '✅ Plik pobrany. Zastąp nim cards.enc.json w swoim repo na GitHubie.';
+        okEl.style.display = 'block';
+    } catch (e) {
+        errEl.textContent = 'Błąd: ' + e.message;
+        errEl.style.display = 'block';
+    }
+});
+
+render();
+</script>
+
+</body>
+</html>
