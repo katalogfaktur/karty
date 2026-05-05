@@ -9,6 +9,7 @@ Progresywna aplikacja webowa (PWA) do trzymania kodów kart lojalnościowych (Bi
 - **Menu w stylu Klarny** - kolorowe kafelki kart 2 kolumny
 - **20 czcionek do wyboru** - wszystkie systemowe czcionki Apple oraz inne czytelne (SF Pro, Helvetica, Avenir, Georgia, Palatino, Times, Courier, Menlo, Monaco, Arial, Verdana, Tahoma, Trebuchet, Gill Sans, Futura, Optima, Didot, Baskerville)
 - **Regulacja rozmiaru tekstu** (13-22px)
+- **Regulacja rozmiaru kodu per karta (20%-150%)** - suwak na stałe widoczny w widoku karty i w trybie sklepowym. Zmiana zapisuje się automatycznie dla danej karty (np. Action ma czytnik o krótkim zasięgu - ustaw 50% raz, zostanie tak na zawsze).
 - **Obsługuje** kody QR, EAN-13, CODE128 oraz QR z URL (jak Żabka)
 - **Działa offline** - po pierwszym wczytaniu Service Worker cachuje aplikację
 

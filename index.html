@@ -328,9 +328,100 @@ input {
     align-items: center;
     justify-content: center;
     min-height: 180px;
+    overflow: hidden;
 }
 .code-svg-wrap svg { max-width: 100%; height: auto; }
 .code-svg-wrap canvas { max-width: 100%; height: auto; }
+.code-scale-target {
+    transform-origin: center center;
+    transition: transform 0.05s linear;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============ KONTROLKA ROZMIARU (widok karty) ============ */
+.size-control {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+}
+.size-control-label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.size-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--bg-elevated-2);
+    color: var(--text);
+    font-size: 1.2rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+}
+.size-btn:active { background: var(--accent-2); transform: scale(0.94); }
+.size-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: var(--bg-elevated-2);
+    border-radius: 3px;
+    outline: none;
+    min-width: 0;
+}
+.size-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.size-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.size-percent {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 44px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+.size-reset {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: transparent;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.size-reset:active { background: var(--bg-elevated-2); }
 .code-number {
     color: #1a1a1a;
     font-size: 1.1rem;
@@ -679,6 +770,42 @@ input {
 }
 .shop-hint b { color: #000; }
 
+/* ============ KONTROLKA ROZMIARU (tryb sklepowy - tło białe) ============ */
+.shop-size-control {
+    background: #f4f4f8;
+    border-top: 1px solid #e5e5ea;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.shop-size-control .size-control-label { color: #666; }
+.shop-size-control .size-btn {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 1px solid #ddd;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.shop-size-control .size-btn:active { background: var(--accent-2); color: white; }
+.shop-size-control .size-slider {
+    background: #ddd;
+}
+.shop-size-control .size-slider::-webkit-slider-thumb { background: var(--accent-2); }
+.shop-size-control .size-slider::-moz-range-thumb { background: var(--accent-2); }
+.shop-size-control .size-percent { color: var(--accent-2); }
+.shop-size-control .size-reset { color: #666; }
+.shop-size-control .size-reset:active { background: #e5e5ea; }
+
+.shop-code-area .code-scale-target {
+    transform-origin: center center;
+    transition: transform 0.05s linear;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
 /* Toast */
 .toast {
     position: fixed;
@@ -781,6 +908,14 @@ input {
             <div class="code-number" id="code-number"></div>
             <div class="code-url" id="code-url"></div>
         </div>
+        <div class="size-control" id="card-size-control">
+            <span class="size-control-label">Rozmiar</span>
+            <button class="size-btn" id="card-size-minus" aria-label="Zmniejsz">−</button>
+            <input type="range" class="size-slider" id="card-size-slider" min="20" max="150" step="5" value="100">
+            <button class="size-btn" id="card-size-plus" aria-label="Zwiększ">+</button>
+            <span class="size-percent" id="card-size-percent">100%</span>
+            <button class="size-reset" id="card-size-reset" aria-label="Resetuj">×</button>
+        </div>
         <button class="shop-mode-btn" id="shop-mode-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="4"/>
@@ -807,6 +942,14 @@ input {
         <div class="shop-code-wrap" id="shop-code-wrap"></div>
         <div class="shop-code-number" id="shop-code-number"></div>
         <div class="shop-code-url" id="shop-code-url"></div>
+    </div>
+    <div class="shop-size-control" id="shop-size-control">
+        <span class="size-control-label">Rozmiar</span>
+        <button class="size-btn" id="shop-size-minus" aria-label="Zmniejsz">−</button>
+        <input type="range" class="size-slider" id="shop-size-slider" min="20" max="150" step="5" value="100">
+        <button class="size-btn" id="shop-size-plus" aria-label="Zwiększ">+</button>
+        <span class="size-percent" id="shop-size-percent">100%</span>
+        <button class="size-reset" id="shop-size-reset" aria-label="Resetuj">×</button>
     </div>
     <div class="shop-hint">
         💡 <b>Pokaż ekran kasjerowi.</b> Ekran nie zgaśnie. Aby wyjść - dotknij ✕
@@ -964,6 +1107,7 @@ const STATE = {
     cards: [],
     settings: { font: 'system', size: 16, sort: 'usage' },
     usage: {}, // { cardId: count }
+    cardSizes: {}, // { cardId: percent } - rozmiar kodu zapamiętany per karta (20-150)
     currentCardId: null,
     editingCardId: null,
     wakeLock: null, // dla trybu sklepowego
@@ -1132,6 +1276,35 @@ function bumpUsage(cardId) {
     saveUsage();
 }
 
+// ============ ROZMIAR KODU PER KARTA ============
+// STATE.cardSizes[cardId] = liczba (procent: 20-150). Brak = 100.
+function loadCardSizes() {
+    const s = localStorage.getItem('card_sizes');
+    if (s) {
+        try { STATE.cardSizes = JSON.parse(s) || {}; } catch { STATE.cardSizes = {}; }
+    }
+}
+
+function saveCardSizes() {
+    localStorage.setItem('card_sizes', JSON.stringify(STATE.cardSizes));
+}
+
+function getCardSize(cardId) {
+    const v = STATE.cardSizes[cardId];
+    return (typeof v === 'number' && v >= 20 && v <= 150) ? v : 100;
+}
+
+function setCardSize(cardId, percent) {
+    const p = Math.max(20, Math.min(150, parseInt(percent, 10) || 100));
+    if (p === 100) {
+        delete STATE.cardSizes[cardId]; // 100% = wartość domyślna, nie trzeba przechowywać
+    } else {
+        STATE.cardSizes[cardId] = p;
+    }
+    saveCardSizes();
+    return p;
+}
+
 function getSortedCards() {
     const cards = [...STATE.cards];
     const mode = STATE.settings.sort || 'usage';
@@ -1219,13 +1392,19 @@ function openCard(id) {
     const wrap = document.getElementById('code-svg-wrap');
     wrap.innerHTML = '';
 
+    // Wrapper dla skalowania (transform)
+    const scaleTarget = document.createElement('div');
+    scaleTarget.className = 'code-scale-target';
+    scaleTarget.id = 'card-scale-target';
+    wrap.appendChild(scaleTarget);
+
     const isUrl = /^https?:\/\//i.test(card.value);
 
     if (card.type === 'qr') {
         // qrcodejs2 API: new QRCode(element, options)
         const container = document.createElement('div');
         container.style.cssText = 'display:inline-block;';
-        wrap.appendChild(container);
+        scaleTarget.appendChild(container);
         try {
             new QRCode(container, {
                 text: card.value,
@@ -1240,7 +1419,7 @@ function openCard(id) {
         }
     } else {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        wrap.appendChild(svg);
+        scaleTarget.appendChild(svg);
         try {
             JsBarcode(svg, card.value, {
                 format: card.type,
@@ -1257,7 +1436,20 @@ function openCard(id) {
     document.getElementById('code-number').textContent = isUrl ? '' : card.value;
     document.getElementById('code-url').textContent = isUrl ? card.value : '';
 
+    // Wczytaj zapisany rozmiar dla tej karty i zaaplikuj
+    const savedSize = getCardSize(id);
+    applyCardScale(savedSize);
+    const slider = document.getElementById('card-size-slider');
+    const percent = document.getElementById('card-size-percent');
+    if (slider) slider.value = savedSize;
+    if (percent) percent.textContent = savedSize + '%';
+
     showScreen('card-screen');
+}
+
+function applyCardScale(percent) {
+    const target = document.getElementById('card-scale-target');
+    if (target) target.style.transform = `scale(${percent / 100})`;
 }
 
 // ============ TRYB SKLEPOWY ============
@@ -1277,12 +1469,19 @@ async function enterShopMode() {
     wrap.innerHTML = '';
     wrap.className = 'shop-code-wrap';
 
+    // Wrapper dla skalowania
+    const scaleTarget = document.createElement('div');
+    scaleTarget.className = 'code-scale-target';
+    scaleTarget.id = 'shop-scale-target';
+    scaleTarget.style.width = '100%';
+    wrap.appendChild(scaleTarget);
+
     const isUrl = /^https?:\/\//i.test(card.value);
 
     if (card.type === 'qr') {
         wrap.classList.add('qr');
         const container = document.createElement('div');
-        wrap.appendChild(container);
+        scaleTarget.appendChild(container);
         try {
             new QRCode(container, {
                 text: card.value,
@@ -1298,7 +1497,7 @@ async function enterShopMode() {
     } else {
         wrap.classList.add('barcode');
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        wrap.appendChild(svg);
+        scaleTarget.appendChild(svg);
         try {
             JsBarcode(svg, card.value, {
                 format: card.type,
@@ -1315,14 +1514,36 @@ async function enterShopMode() {
     document.getElementById('shop-code-number').textContent = isUrl ? '' : card.value;
     document.getElementById('shop-code-url').textContent = isUrl ? card.value : '';
 
+    // Wczytaj zapisany rozmiar i zaaplikuj
+    const savedSize = getCardSize(STATE.currentCardId);
+    applyShopScale(savedSize);
+    const slider = document.getElementById('shop-size-slider');
+    const percent = document.getElementById('shop-size-percent');
+    if (slider) slider.value = savedSize;
+    if (percent) percent.textContent = savedSize + '%';
+
     showScreen('shop-mode-screen');
 
     // Wake Lock - ekran nie gaśnie
     await acquireWakeLock();
 }
 
+function applyShopScale(percent) {
+    const target = document.getElementById('shop-scale-target');
+    if (target) target.style.transform = `scale(${percent / 100})`;
+}
+
 async function exitShopMode() {
     releaseWakeLock();
+    // Odśwież rozmiar w widoku karty (mógł się zmienić w trybie sklepowym)
+    if (STATE.currentCardId) {
+        const savedSize = getCardSize(STATE.currentCardId);
+        applyCardScale(savedSize);
+        const slider = document.getElementById('card-size-slider');
+        const percent = document.getElementById('card-size-percent');
+        if (slider) slider.value = savedSize;
+        if (percent) percent.textContent = savedSize + '%';
+    }
     showScreen('card-screen');
 }
 
@@ -1409,7 +1630,13 @@ async function saveCard() {
 function deleteCurrentCardInModal() {
     if (!STATE.editingCardId) return;
     if (!confirm('Usunąć tę kartę?')) return;
-    STATE.cards = STATE.cards.filter(c => c.id !== STATE.editingCardId);
+    const idToDel = STATE.editingCardId;
+    STATE.cards = STATE.cards.filter(c => c.id !== idToDel);
+    // Sprzątanie - rozmiar i statystyki tej karty
+    delete STATE.cardSizes[idToDel];
+    saveCardSizes();
+    delete STATE.usage[idToDel];
+    saveUsage();
     closeCardModal();
     renderCardsList();
     showToast('Karta usunięta. Pamiętaj o eksporcie i aktualizacji na GitHubie.');
@@ -1549,6 +1776,7 @@ async function autoLogin() {
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     loadUsage();
+    loadCardSizes();
     populateSettings();
 
     // LOGIN
@@ -1608,6 +1836,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tryb sklepowy
     document.getElementById('shop-mode-btn').addEventListener('click', enterShopMode);
     document.getElementById('shop-close-btn').addEventListener('click', exitShopMode);
+
+    // ============ KONTROLKI ROZMIARU KODU ============
+    // Wspólna logika: aktualizuj suwak, etykietę procentową, transform i zapisz w localStorage
+    function bindSizeControls(prefix, applyFn) {
+        const slider = document.getElementById(prefix + '-size-slider');
+        const percentEl = document.getElementById(prefix + '-size-percent');
+        const minus = document.getElementById(prefix + '-size-minus');
+        const plus = document.getElementById(prefix + '-size-plus');
+        const reset = document.getElementById(prefix + '-size-reset');
+
+        function update(val, persist = true) {
+            const v = Math.max(20, Math.min(150, parseInt(val, 10) || 100));
+            slider.value = v;
+            percentEl.textContent = v + '%';
+            applyFn(v);
+            if (persist && STATE.currentCardId) {
+                setCardSize(STATE.currentCardId, v);
+            }
+        }
+
+        slider.addEventListener('input', () => update(slider.value));
+        minus.addEventListener('click', () => update(parseInt(slider.value, 10) - 5));
+        plus.addEventListener('click', () => update(parseInt(slider.value, 10) + 5));
+        reset.addEventListener('click', () => update(100));
+    }
+
+    bindSizeControls('card', applyCardScale);
+    bindSizeControls('shop', applyShopScale);
     document.getElementById('export-menu').addEventListener('click', exportEncrypted);
     document.getElementById('logout-menu').addEventListener('click', () => {
         if (!confirm('Zablokować aplikację i usunąć zapamiętane urządzenie?')) return;

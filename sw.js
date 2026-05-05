@@ -1,5 +1,5 @@
 // Service Worker - umożliwia działanie offline po pierwszym wczytaniu
-const CACHE_NAME = 'moje-karty-v1';
+const CACHE_NAME = 'moje-karty-v2';
 const ASSETS = [
     './',
     './index.html',
